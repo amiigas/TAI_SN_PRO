@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 
 class IntMappedZeroPaddedDataset(Dataset):
-    def __init__(self, x, y, standarize=True, transforms=None):
+    def __init__(self, x, y, standarize=True, transforms=None, device="cpu"):
         self.samples = x
         self.targets = y
         self.transforms = transforms
@@ -12,8 +12,8 @@ class IntMappedZeroPaddedDataset(Dataset):
         if standarize:
             self.samples = StandardScaler().fit_transform(self.samples)
 
-        self.samples = torch.from_numpy(self.samples).float()
-        self.targets = torch.from_numpy(self.targets).float().reshape(-1, 1)
+        self.samples = torch.from_numpy(self.samples).float().to(device)
+        self.targets = torch.from_numpy(self.targets).float().reshape(-1, 1).to(device)
 
     def __len__(self):
         return self.targets.shape[0]

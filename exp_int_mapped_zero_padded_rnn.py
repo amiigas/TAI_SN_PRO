@@ -38,8 +38,8 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
 
-    train_dataset = IntMappedZeroPaddedDataset(X_train, y_train)
-    test_dataset = IntMappedZeroPaddedDataset(X_test, y_test)
+    train_dataset = IntMappedZeroPaddedDataset(X_train, y_train, device=cfg.device)
+    test_dataset = IntMappedZeroPaddedDataset(X_test, y_test, device=cfg.device)
 
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=cfg.batch_size, shuffle=False)
