@@ -1,0 +1,5 @@
+.venv
+.env
+runs/
+__pycache__
+data/int_mapped_zero_padded/
