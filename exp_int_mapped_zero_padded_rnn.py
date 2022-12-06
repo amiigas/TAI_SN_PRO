@@ -44,8 +44,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=cfg.batch_size, shuffle=False)
 
-    model = ProteinRNN(hidden_dim=cfg.hidden_dim, n_layers=cfg.n_layers)
-    model.to(cfg.device)
+    model = ProteinRNN(hidden_dim=cfg.hidden_dim, n_layers=cfg.n_layers, device=cfg.device)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, momentum=cfg.momentum)
 

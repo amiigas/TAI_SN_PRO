@@ -6,9 +6,10 @@ from tqdm import tqdm
 
 
 class ProteinMLP(nn.Module):
-    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid") -> None:
+    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid", device="cpu") -> None:
         super(ProteinMLP, self).__init__()
         self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}")
+        self.device = device
         
         if activation == "sigmoid":
             self._activation_func = nn.Sigmoid()
@@ -27,6 +28,8 @@ class ProteinMLP(nn.Module):
             self._activation_func,
             nn.Linear(128, 1)
         )
+
+        self.to(self.device)
 
     def forward(self, x):
         return self.linear_sigmoid_stack(x)
@@ -73,17 +76,20 @@ class ProteinMLP(nn.Module):
 
 
 class ProteinRNN(nn.Module):
-    def __init__(self, input_size=1, hidden_dim=12, n_layers=1) -> None:
+    def __init__(self, input_size=1, hidden_dim=12, n_layers=1, device="cpu") -> None:
         super(ProteinRNN, self).__init__()
         self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}")
+        self.device = device
 
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.rnn = nn.RNN(input_size, hidden_dim, n_layers, batch_first=True)   
         self.fc = nn.Linear(hidden_dim, 1)
 
+        self.to(self.device)
+
     def forward(self, x):
-        hidden = torch.zeros(self.n_layers, x.shape[0], self.hidden_dim)
+        hidden = torch.zeros(self.n_layers, x.shape[0], self.hidden_dim).to(self.device)
         x = torch.unsqueeze(x, 2)
         out, _ = self.rnn(x, hidden)
         out = out[:,-1, :]
