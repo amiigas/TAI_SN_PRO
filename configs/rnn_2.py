@@ -9,7 +9,7 @@ class Config:
     seed: int = 7777
     device: str = "cuda"
     batch_size: int = 64
-    hidden_dim: int = 12
+    hidden_dim: int = 24
     n_layers: int = 1
     loss_func: torch.nn.Module = torch.nn.MSELoss()
     learning_rate: float = 0.001

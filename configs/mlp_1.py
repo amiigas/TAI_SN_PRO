@@ -8,11 +8,11 @@ from torchmetrics import SpearmanCorrCoef
 class Config:
     seed: int = 7777
     device: str = "cuda"
-    batch_size: int = 32
+    batch_size: int = 64
     dropout: float = 0.0
     activation: str = "sigmoid"
     loss_func: torch.nn.Module = torch.nn.MSELoss()
-    learning_rate: float = 0.01
+    learning_rate: float = 0.001
     momentum: float = 0.9
     epochs: int = 100
     metric: torch.nn.Module = SpearmanCorrCoef()
