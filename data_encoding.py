@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import os
-
+import sys
 
 train_df = pd.read_csv("./data/updated_train.csv")
 
@@ -18,7 +18,8 @@ for i, seq in enumerate(tqdm(train_df.protein_sequence)):
     for j, char in enumerate(seq):
         protein_sequences[i][j] = mapping[char]
 
-os.makedirs("./data/int_mapped_zero_padded")
+if not os.path.exists("./data/int_mapped_zero_padded"):
+    os.makedirs("./data/int_mapped_zero_padded")
 np.save("./data/int_mapped_zero_padded/inputs.npy", protein_sequences)
 np.save("./data/int_mapped_zero_padded/targets.npy", train_df.tm)
 
@@ -31,6 +32,7 @@ for i, seq in enumerate(tqdm(train_df.protein_sequence)):
     for j, char in enumerate(seq[::-1]):
         protein_sequences[i][max_seq_len-1-j] = one_hot_encoded_mapping[char]
 
-os.makedirs("./data/one_hot_zero_padded")
+if not os.path.exists("./data/one_hot_zero_padded"):
+    os.makedirs("./data/one_hot_zero_padded")
 np.save("./data/one_hot_zero_padded/inputs.npy", protein_sequences)
 np.save("./data/one_hot_zero_padded/targets.npy", train_df.tm)
