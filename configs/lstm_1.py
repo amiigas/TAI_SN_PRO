@@ -3,19 +3,19 @@ from dataclasses import dataclass
 import torch
 from torchmetrics import SpearmanCorrCoef
 
-from src.models import BaseProteinModel, ProteinMLP
+from src.models import BaseProteinModel, ProteinLSTM
 
 
 @dataclass
 class Config:
-    data_dir: str = "data/int_mapped_zero_padded"
-    model: BaseProteinModel = ProteinMLP
-    input_size: int = 8798
+    data_dir: str = "data/one_hot_zero_padded"
+    model: BaseProteinModel = ProteinLSTM
+    input_size: int = 20
     seed: int = 7777
     device: str = "cuda"
     batch_size: int = 64
-    dropout: float = 0.2
-    activation: str = "sigmoid"
+    hidden_dim: int = 12
+    n_layers: int = 1
     loss_func: torch.nn.Module = torch.nn.MSELoss()
     learning_rate: float = 0.001
     momentum: float = 0.9

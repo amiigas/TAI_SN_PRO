@@ -3,9 +3,14 @@ from dataclasses import dataclass
 import torch
 from torchmetrics import SpearmanCorrCoef
 
+from src.models import BaseProteinModel, ProteinRNN
+
 
 @dataclass
 class Config:
+    data_dir: str = "data/one_hot_zero_padded"
+    model: BaseProteinModel = ProteinRNN
+    input_size: int = 20
     seed: int = 7777
     device: str = "cuda"
     batch_size: int = 64

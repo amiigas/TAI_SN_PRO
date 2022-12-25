@@ -3,9 +3,14 @@ from dataclasses import dataclass
 import torch
 from torchmetrics import SpearmanCorrCoef
 
+from src.models import BaseProteinModel, ProteinMLP
+
 
 @dataclass
 class Config:
+    data_dir: str = "data/int_mapped_zero_padded"
+    model: BaseProteinModel = ProteinMLP
+    input_size: int = 8798
     seed: int = 7777
     device: str = "cuda"
     batch_size: int = 64

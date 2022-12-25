@@ -8,8 +8,8 @@ import torch
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
-from src.datasets import ZeroPaddedOneHotRightAlignedDataset
-from src.models import ProteinRNN
+from src.datasets import ProteinDataset
+from dataclasses import asdict
 
 
 def seed_everything(seed=7777):
@@ -22,7 +22,7 @@ def seed_everything(seed=7777):
 
 def parse_config(config_name):
     module = importlib.import_module(f"configs.{config_name}")
-    return module.Config
+    return module.Config()
 
 
 if __name__ == "__main__":
@@ -34,24 +34,20 @@ if __name__ == "__main__":
 
     seed_everything(cfg.seed)
 
-    X = np.load("./data/one_hot_zero_padded/inputs.npy")
-    Y = np.load("./data/one_hot_zero_padded/targets.npy")
+    inputs = os.path.join(cfg.data_dir, "inputs.npy")
+    targets = os.path.join(cfg.data_dir, "targets.npy")
+    X = np.load(inputs)
+    Y = np.load(targets)
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
 
-    train_dataset = ZeroPaddedOneHotRightAlignedDataset(X_train, y_train, device=cfg.device)
-    test_dataset = ZeroPaddedOneHotRightAlignedDataset(X_test, y_test, device=cfg.device)
+    train_dataset = ProteinDataset(X_train, y_train, device=cfg.device)
+    test_dataset = ProteinDataset(X_test, y_test, device=cfg.device)
 
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=cfg.batch_size, shuffle=False)
 
-    model = ProteinRNN(
-        input_size=20,
-        hidden_dim=cfg.hidden_dim,
-        n_layers=cfg.n_layers,
-        device=cfg.device,
-        config_name=cfg_name
-    )
+    model = cfg.model(**asdict(cfg), config_name=cfg_name)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, momentum=cfg.momentum)
 

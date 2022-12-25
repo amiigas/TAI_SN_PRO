@@ -5,8 +5,52 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 
-class ProteinMLP(nn.Module):
-    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid", device="cpu", config_name="") -> None:
+class BaseProteinModel(nn.Module):
+    def __init__(self) -> None:
+        super(BaseProteinModel, self).__init__()
+
+    def fit(self, train_dataloader, valid_dataloader, loss_func, metric, optimizer, epochs):
+        for e in range(epochs):
+            # train
+            self.train()
+            total_train_loss = 0.0
+            for X, y in tqdm(train_dataloader, desc=f"Epoch {e}"):
+                pred = self(X)
+                loss = loss_func(pred, y)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                total_train_loss += loss.item()
+
+            total_train_loss /= len(train_dataloader)
+            self._tb_writer.add_scalar("loss/train", total_train_loss, e)
+            
+            # valid
+            self.eval()
+            total_valid_loss = 0.0
+            valid_metric = metric
+            with torch.no_grad():
+                for X, y in tqdm(valid_dataloader, desc=f"Validating"):
+                    pred = self(X)
+
+                    loss = loss_func(pred, y)
+                    valid_metric.update(pred.flatten(), y.flatten())
+                    total_valid_loss += loss.item()
+
+            total_valid_loss /= len(valid_dataloader)
+            total_metric = valid_metric.compute()
+            self._tb_writer.add_scalar("loss/valid", total_valid_loss, e)
+            self._tb_writer.add_scalar("metric/valid", total_metric, e)
+
+            valid_metric.reset()
+
+        self._tb_writer.flush()
+
+
+class ProteinMLP(BaseProteinModel):
+    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid", device="cpu", config_name="", **kwargs) -> None:
         super(ProteinMLP, self).__init__()
         self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}/{config_name}")
         self.device = device
@@ -34,49 +78,9 @@ class ProteinMLP(nn.Module):
     def forward(self, x):
         return self.linear_sigmoid_stack(x)
 
-    def fit(self, train_dataloader, valid_dataloader, loss_func, metric, optimizer, epochs):
-        for e in range(epochs):
-            # train
-            self.train()
-            total_train_loss = 0.0
-            for X, y in tqdm(train_dataloader, desc=f"Epoch {e}"):
-                pred = self(X)
-                loss = loss_func(pred, y)
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-                total_train_loss += loss.item()
-
-            total_train_loss /= len(train_dataloader)
-            self._tb_writer.add_scalar("loss/train", total_train_loss, e)
-            
-            # valid
-            self.eval()
-            total_valid_loss = 0.0
-            valid_metric = metric
-            with torch.no_grad():
-                for X, y in tqdm(valid_dataloader, desc=f"Validating"):
-                    pred = self(X)
-
-                    loss = loss_func(pred, y)
-                    valid_metric.update(pred.flatten(), y.flatten())
-                    total_valid_loss += loss.item()
-
-            total_valid_loss /= len(valid_dataloader)
-            total_metric = valid_metric.compute()
-            self._tb_writer.add_scalar("loss/valid", total_valid_loss, e)
-            self._tb_writer.add_scalar("metric/valid", total_metric, e)
-
-            valid_metric.reset()
-
-        self._tb_writer.flush()
-
-
-
-class ProteinRNN(nn.Module):
-    def __init__(self, input_size, hidden_dim=12, n_layers=1, device="cpu", config_name="") -> None:
+class ProteinRNN(BaseProteinModel):
+    def __init__(self, input_size, hidden_dim=12, n_layers=1, device="cpu", config_name="", **kwargs) -> None:
         super(ProteinRNN, self).__init__()
         self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}/{config_name}")
         self.input_size = input_size
@@ -99,41 +103,28 @@ class ProteinRNN(nn.Module):
         
         return out
 
-    def fit(self, train_dataloader, valid_dataloader, loss_func, metric, optimizer, epochs):
-        for e in range(epochs):
-            # train
-            self.train()
-            total_train_loss = 0.0
-            for X, y in tqdm(train_dataloader, desc=f"Epoch {e}"):
-                pred = self(X)
-                loss = loss_func(pred, y)
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+class ProteinLSTM(BaseProteinModel):
+    def __init__(self, input_size, hidden_dim=12, n_layers=1, device="cpu", config_name="", **kwargs) -> None:
+        super(ProteinLSTM, self).__init__()
+        self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}/{config_name}")
+        self.input_size = input_size
+        self.device = device
+        self.hidden_dim = hidden_dim
+        self.n_layers = n_layers
+        
+        self.lstm = nn.LSTM(input_size, hidden_dim, n_layers, batch_first=True)   
+        self.fc = nn.Linear(hidden_dim, 1)
 
-                total_train_loss += loss.item()
+        self.to(self.device)
 
-            total_train_loss /= len(train_dataloader)
-            self._tb_writer.add_scalar("loss/train", total_train_loss, e)
-            
-            # valid
-            self.eval()
-            total_valid_loss = 0.0
-            valid_metric = metric
-            with torch.no_grad():
-                for X, y in tqdm(valid_dataloader, desc=f"Validating"):
-                    pred = self(X)
-
-                    loss = loss_func(pred, y)
-                    valid_metric.update(pred.flatten(), y.flatten())
-                    total_valid_loss += loss.item()
-
-            total_valid_loss /= len(valid_dataloader)
-            total_metric = valid_metric.compute()
-            self._tb_writer.add_scalar("loss/valid", total_valid_loss, e)
-            self._tb_writer.add_scalar("metric/valid", total_metric, e)
-
-            valid_metric.reset()
-
-        self._tb_writer.flush()
+    def forward(self, x):
+        hidden = torch.rand((self.n_layers, x.shape[0], self.hidden_dim)).to(self.device)
+        cell = torch.rand((self.n_layers, x.shape[0], self.hidden_dim)).to(self.device)
+        if self.input_size == 1:
+            x = torch.unsqueeze(x, 2)
+        out, _ = self.lstm(x, (hidden, cell))
+        out = out[:, -1, :]
+        out = self.fc(out)
+        
+        return out
