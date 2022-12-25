@@ -3,3 +3,5 @@
 runs/
 __pycache__
 data/int_mapped_zero_padded/
+data/one_hot_zero_padded/
+.DS_Store

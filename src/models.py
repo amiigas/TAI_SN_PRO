@@ -6,9 +6,9 @@ from tqdm import tqdm
 
 
 class ProteinMLP(nn.Module):
-    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid", device="cpu") -> None:
+    def __init__(self, input_size=8798, dropout=0.0, activation="sigmoid", device="cpu", config_name="") -> None:
         super(ProteinMLP, self).__init__()
-        self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}")
+        self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}/{config_name}")
         self.device = device
         
         if activation == "sigmoid":
@@ -76,23 +76,25 @@ class ProteinMLP(nn.Module):
 
 
 class ProteinRNN(nn.Module):
-    def __init__(self, input_size=1, hidden_dim=12, n_layers=1, device="cpu") -> None:
+    def __init__(self, input_size, hidden_dim=12, n_layers=1, device="cpu", config_name="") -> None:
         super(ProteinRNN, self).__init__()
-        self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}")
+        self._tb_writer = SummaryWriter(log_dir=f"runs/{self.__class__.__name__}/{config_name}")
+        self.input_size = input_size
         self.device = device
-
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
+        
         self.rnn = nn.RNN(input_size, hidden_dim, n_layers, batch_first=True)   
         self.fc = nn.Linear(hidden_dim, 1)
 
         self.to(self.device)
 
     def forward(self, x):
-        hidden = torch.zeros(self.n_layers, x.shape[0], self.hidden_dim).to(self.device)
-        x = torch.unsqueeze(x, 2)
+        hidden = torch.rand((self.n_layers, x.shape[0], self.hidden_dim)).to(self.device)
+        if self.input_size == 1:
+            x = torch.unsqueeze(x, 2)
         out, _ = self.rnn(x, hidden)
-        out = out[:,-1, :]
+        out = out[:, -1, :]
         out = self.fc(out)
         
         return out

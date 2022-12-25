@@ -26,3 +26,20 @@ class IntMappedZeroPaddedDataset(Dataset):
             sample = self.transforms(sample)
 
         return sample, target
+
+class ZeroPaddedOneHotRightAlignedDataset(Dataset):
+    def __init__(self, x, y, device="cpu"):
+        self.samples = x
+        self.targets = y
+
+        self.samples = torch.from_numpy(self.samples).float().to(device)
+        self.targets = torch.from_numpy(self.targets).float().reshape(-1, 1).to(device)
+
+    def __len__(self):
+        return self.targets.shape[0]
+
+    def __getitem__(self, index):
+        sample = self.samples[index]
+        target = self.targets[index]
+
+        return sample, target

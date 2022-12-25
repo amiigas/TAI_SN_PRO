@@ -8,8 +8,8 @@ import torch
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
-from src.datasets import IntMappedZeroPaddedDataset
-from src.models import ProteinMLP
+from src.datasets import ZeroPaddedOneHotRightAlignedDataset
+from src.models import ProteinRNN
 
 
 def seed_everything(seed=7777):
@@ -34,20 +34,21 @@ if __name__ == "__main__":
 
     seed_everything(cfg.seed)
 
-    X = np.load("./data/int_mapped_zero_padded/inputs.npy")
-    Y = np.load("./data/int_mapped_zero_padded/targets.npy")
+    X = np.load("./data/one_hot_zero_padded/inputs.npy")
+    Y = np.load("./data/one_hot_zero_padded/targets.npy")
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
 
-    train_dataset = IntMappedZeroPaddedDataset(X_train, y_train, device=cfg.device)
-    test_dataset = IntMappedZeroPaddedDataset(X_test, y_test, device=cfg.device)
+    train_dataset = ZeroPaddedOneHotRightAlignedDataset(X_train, y_train, device=cfg.device)
+    test_dataset = ZeroPaddedOneHotRightAlignedDataset(X_test, y_test, device=cfg.device)
 
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=cfg.batch_size, shuffle=False)
 
-    model = ProteinMLP(
-        dropout=cfg.dropout,
-        activation=cfg.activation,
+    model = ProteinRNN(
+        input_size=20,
+        hidden_dim=cfg.hidden_dim,
+        n_layers=cfg.n_layers,
         device=cfg.device,
         config_name=cfg_name
     )
