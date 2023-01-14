@@ -19,5 +19,5 @@ class Config:
     loss_func: torch.nn.Module = torch.nn.MSELoss()
     learning_rate: float = 0.001
     momentum: float = 0.9
-    epochs: int = 100
+    epochs: int = 50
     metric: torch.nn.Module = SpearmanCorrCoef()
